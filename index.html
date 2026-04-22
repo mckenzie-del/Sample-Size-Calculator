@@ -158,12 +158,12 @@
       </select>
     </div>
     <div class="ctrl-row">
-      <label for="defectRate">Expected defect rate</label>
+      <label for="defectRate">Quality expectations</label>
       <select id="defectRate">
-        <option value="rare">Rare — less than 1%</option>
-        <option value="low" selected>Low — around 1–5%</option>
-        <option value="moderate">Moderate — around 5–15%</option>
-        <option value="high">High — more than 15%</option>
+        <option value="rare">Strict — 99% accuracy or above</option>
+        <option value="low" selected>High — around 95–99% accuracy</option>
+        <option value="moderate">Moderate — around 90–95% accuracy</option>
+        <option value="high">Flexible — below 90% acceptable</option>
       </select>
     </div>
   </div>
@@ -252,7 +252,7 @@
     resultPct.textContent = pct + '% of the batch';
 
     const riskText = { high: 'low-stakes situation', medium: 'moderate-risk situation', low: 'high-risk or safety-critical situation' }[risk];
-    const defectText = { rare: 'rare defects require a larger net to catch them', low: 'low defect rate needs reasonable coverage', moderate: 'moderate defect rate means issues surface with fewer checks', high: 'high defect rate means problems appear quickly in sampling' }[defect];
+    const defectText = { rare: 'strict quality expectations require a larger sample to verify compliance', low: 'high quality expectations need solid coverage to confirm accuracy', moderate: 'moderate quality threshold means a mid-range sample is sufficient', high: 'flexible quality expectations allow a smaller sample' }[defect];
     resultNote.textContent = 'For a ' + riskText + ' — ' + defectText + '.';
   }
 
