@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sample Size Calculator — Asset QC</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    background: #f5f5f3;
+    color: #1a1a18;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+
+  .page { max-width: 680px; margin: 0 auto; }
+
+  .header { margin-bottom: 2rem; }
+  .header h1 { font-size: 26px; font-weight: 600; color: #185FA5; margin-bottom: 6px; }
+  .header p { font-size: 15px; color: #5f5e5a; line-height: 1.6; }
+
+  .card {
+    background: #fff;
+    border: 0.5px solid rgba(0,0,0,0.12);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .card h2 { font-size: 15px; font-weight: 600; color: #1a1a18; margin-bottom: 1rem; }
+
+  .ctrl-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 1.1rem;
+    flex-wrap: wrap;
+  }
+  .ctrl-row:last-child { margin-bottom: 0; }
+
+  label { font-size: 13px; color: #5f5e5a; min-width: 140px; }
+
+  input[type=text] {
+    width: 180px;
+    font-size: 22px;
+    font-weight: 600;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(0,0,0,0.12);
+    background: #f5f5f3;
+    color: #185FA5;
+    letter-spacing: 0.02em;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  }
+  input[type=text]:hover { background: #eef4fb; border-color: #85B7EB; }
+  input[type=text]:focus { outline: none; background: #fff; border-color: #378ADD; box-shadow: 0 0 0 3px rgba(55,138,221,0.15); }
+  input[type=text].error { border-color: #E24B4A; box-shadow: 0 0 0 3px rgba(226,75,74,0.15); background: #fff; }
+  .batch-hint { font-size: 12px; color: #888780; margin-top: 6px; }
+
+  select {
+    flex: 1;
+    min-width: 180px;
+    font-size: 13px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    border: 0.5px solid rgba(0,0,0,0.2);
+    background: #fff;
+    color: #1a1a18;
+    cursor: pointer;
+    appearance: auto;
+  }
+
+  .ctrl-val { font-size: 13px; font-weight: 600; min-width: 36px; color: #1a1a18; }
+
+  .result-box {
+    background: #E6F1FB;
+    border: 1.5px solid #378ADD;
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.25rem;
+  }
+
+  .result-num { font-size: 52px; font-weight: 700; color: #185FA5; line-height: 1; min-width: 80px; }
+
+  .result-detail { flex: 1; min-width: 160px; }
+  .result-label { font-size: 12px; color: #185FA5; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .result-pct { font-size: 18px; font-weight: 600; color: #0C447C; margin-bottom: 6px; }
+  .result-note { font-size: 13px; color: #185FA5; line-height: 1.5; }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+    margin-top: 1rem;
+  }
+
+  .stat {
+    background: #f5f5f3;
+    border-radius: 8px;
+    padding: 0.75rem;
+    text-align: center;
+  }
+  .stat-val { font-size: 20px; font-weight: 600; color: #1a1a18; }
+  .stat-lbl { font-size: 11px; color: #888780; margin-top: 2px; }
+
+  .rules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+  }
+
+  .rule { border-radius: 10px; padding: 0.9rem; }
+  .rule-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .rule-desc { font-size: 12px; line-height: 1.5; }
+
+  .tip-box {
+    background: #EEEDFE;
+    border-left: 3px solid #534AB7;
+    border-radius: 0 8px 8px 0;
+    padding: 0.9rem 1rem;
+    margin-top: 1rem;
+  }
+  .tip-box p { font-size: 13px; color: #3C3489; line-height: 1.6; }
+  .tip-box strong { color: #26215C; }
+
+  .footer { font-size: 12px; color: #888780; text-align: center; margin-top: 1.5rem; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <h1>Sample size calculator</h1>
+    <p>Asset quality control — find the right number of assets to inspect from a batch.</p>
+  </div>
+
+  <div class="card">
+    <h2>Your batch details</h2>
+    <div style="display:flex; flex-direction:column; align-items:center; padding: 1rem 0 2rem;">
+      <div style="position:relative; display:inline-block;">
+        <label for="batchSize" style="position:absolute; top:8px; left:12px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:#888780; pointer-events:none;">Batch size</label>
+        <input type="text" inputmode="numeric" id="batchSize" placeholder="500" style="width:260px; font-size:36px; text-align:center; padding-top:28px; padding-bottom:10px;" />
+      </div>
+      <div class="batch-hint" id="batchHint" style="text-align:center; margin-top:8px;">Enter the total number of assets in the batch</div>
+    </div>
+    <div class="ctrl-row">
+      <label for="riskLevel">Risk tolerance</label>
+      <select id="riskLevel">
+        <option value="high">Low risk — minor issues, low cost</option>
+        <option value="medium" selected>Medium risk — moderate impact</option>
+        <option value="low">High risk — safety-critical or costly</option>
+      </select>
+    </div>
+    <div class="ctrl-row">
+      <label for="defectRate">Expected defect rate</label>
+      <select id="defectRate">
+        <option value="rare">Rare — less than 1%</option>
+        <option value="low" selected>Low — around 1–5%</option>
+        <option value="moderate">Moderate — around 5–15%</option>
+        <option value="high">High — more than 15%</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Recommended sample</h2>
+    <div class="result-box" id="resultBox">
+      <div class="result-num" id="resultNum">50</div>
+      <div class="result-detail">
+        <div class="result-label">Assets to inspect</div>
+        <div class="result-pct" id="resultPct">10% of batch</div>
+        <div class="result-note" id="resultNote"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    Simple random sampling — asset quality control guide<br>
+    Every asset must have an equal chance of being selected for results to be valid.
+  </div>
+
+</div>
+<script>
+  const batchInput = document.getElementById('batchSize');
+  const batchHint = document.getElementById('batchHint');
+  const riskSel = document.getElementById('riskLevel');
+  const defectSel = document.getElementById('defectRate');
+  const resultNum = document.getElementById('resultNum');
+  const resultPct = document.getElementById('resultPct');
+  const resultNote = document.getElementById('resultNote');
+
+  function getRawValue() {
+    return parseInt(batchInput.value.replace(/,/g, '')) || 0;
+  }
+
+  function formatWithCommas(n) {
+    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  batchInput.addEventListener('input', function() {
+    const pos = this.selectionStart;
+    const raw = this.value.replace(/,/g, '').replace(/[^0-9]/g, '');
+    const num = parseInt(raw) || 0;
+    const formatted = num > 0 ? formatWithCommas(num) : raw;
+    const prevLen = this.value.length;
+    this.value = formatted;
+    const newLen = this.value.length;
+    this.setSelectionRange(pos + (newLen - prevLen), pos + (newLen - prevLen));
+    calc();
+  });
+
+  function calc() {
+    const batch = getRawValue();
+    if (!batch || batch < 1) {
+      batchInput.classList.remove('error');
+      batchHint.textContent = 'Enter the total number of assets in the batch.';
+      batchHint.style.color = '#888780';
+      resultNum.textContent = '0';
+      resultPct.textContent = '—';
+      resultNote.textContent = '';
+      return;
+    }
+    batchInput.classList.remove('error');
+    const risk = riskSel.value;
+    const defect = defectSel.value;
+
+    batchHint.textContent = formatWithCommas(batch) + ' assets in this batch.';
+    batchHint.style.color = '#888780';
+
+    const riskMult = { high: 0.8, medium: 1.0, low: 1.4 }[risk];
+    const defectMult = { rare: 1.5, low: 1.0, moderate: 0.75, high: 0.55 }[defect];
+
+    let base;
+    if (batch <= 100) base = batch * 0.25;
+    else if (batch <= 500) base = 25 + (batch - 100) * 0.12;
+    else if (batch <= 2000) base = 73 + (batch - 500) * 0.06;
+    else base = 163 + (batch - 2000) * 0.02;
+
+    let sample = Math.round(base * riskMult * defectMult);
+    sample = Math.max(5, Math.min(sample, batch));
+
+    const pct = ((sample / batch) * 100).toFixed(1);
+
+    resultNum.textContent = formatWithCommas(sample);
+    resultPct.textContent = pct + '% of the batch';
+
+    const riskText = { high: 'low-stakes situation', medium: 'moderate-risk situation', low: 'high-risk or safety-critical situation' }[risk];
+    const defectText = { rare: 'rare defects require a larger net to catch them', low: 'low defect rate needs reasonable coverage', moderate: 'moderate defect rate means issues surface with fewer checks', high: 'high defect rate means problems appear quickly in sampling' }[defect];
+    resultNote.textContent = 'For a ' + riskText + ' — ' + defectText + '.';
+  }
+
+  batchInput.value = '';
+  batchInput.placeholder = '0';
+  riskSel.addEventListener('change', calc);
+  defectSel.addEventListener('change', calc);
+  calc();
+</script>
+</body>
+</html>
